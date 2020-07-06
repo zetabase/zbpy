@@ -1,6 +1,6 @@
 from setuptools import setup 
 
-modules = ['auth', 'basicqueries', 'queries', 'client', 'cryptography', 'datasci', 'indexedfieldentity', 'pagination', 'permissionentity', 'util', 'zbcert', 'zbprotocol_pb2_grpc', 'zbprotocol_pb2', 'winsign']
+modules = ['auth', 'basicqueries', 'queries', 'client', 'cryptography', 'datasci', 'indexedfieldentity', 'pagination', 'permissionentity', 'util', 'zbcert', 'zbprotocol_pb2_grpc', 'zbprotocol_pb2', 'winsign', 'test_zbpy']
 dependencies = ['pandas ~= 0.23.0',
                 'numpy ~= 1.14.3',
                 'grpcio ~= 1.29.0',
@@ -40,7 +40,7 @@ setup(
     ],
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/routefire/python-zb-client',
+    url='https://github.com/zetabase/zbpy',
     author='Austin Hochman',
     author_email='awh76@cornell.edu',
     install_requires=dependencies

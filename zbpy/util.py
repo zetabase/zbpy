@@ -17,6 +17,7 @@ import time
 from sys import platform
 
 
+
 class Nonce():
     # def nonce_maker(self):
     #     """Generate pseudo-random number and seconds since epoch (UTC)."""
@@ -233,3 +234,9 @@ def new_account_interactive():
 
         print(f'Success! Result: saved identity to file: {id_fn}\n > Id {user_id}')
 
+def test_zbpy():
+    """
+    Test your zbpy installation.
+    """
+    from . import test_zbpy
+    test_zbpy.zbpy_unittests()
