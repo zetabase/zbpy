@@ -2,6 +2,12 @@
 
 The `zbpy` package provides a pure-Python Zetabase client and reference implementation of the Zetabase protocol, along with integrations for commonly used Python tools like Numpy/Pandas.
 
+For more complete documentation, please refer to the main documentation section on the Zetabase website:
+
+1. [Python quick start](https://zetabase.io/docs/#/pysetup)
+2. [Python library reference](https://zetabase.io/static/docs-python/html/zbpy.html)
+3. [Zetabase main documentation](https://zetabase.io/docs/#/)
+
 ## Prerequisites and external dependencies 
 
 1. Python 3.6 or higher 
