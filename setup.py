@@ -3,7 +3,7 @@ from setuptools import setup
 
 modules = ['auth', 'basicqueries', 'queries', 'client', 'cryptography', 'datasci', 'indexedfieldentity', 'pagination', 'permissionentity', 'util', 'zbcert', 'zbprotocol_pb2_grpc', 'zbprotocol_pb2', 'winsign', 'test_zbpy']
 dependencies = ['pandas >= 1.0.5',
-                'numpy >= 1.19.0'',
+                'numpy >= 1.19.0',
                 'grpcio >= 1.29.0',
                 'grpcio-tools >= 1.29.0',
                 'phonenumbers >= 8.12.5',
