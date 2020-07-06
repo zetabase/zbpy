@@ -1,4 +1,4 @@
-# zbpy: officially supported Zetabase client for Python 
+# zbpy: official Zetabase client for Python 
 
 The `zbpy` package provides a pure-Python Zetabase client and reference implementation of the Zetabase protocol, along with integrations for commonly used Python tools like Numpy/Pandas.
 
@@ -65,25 +65,33 @@ form zbpy import util
 util.test_zbpy()
 ```
 
-## Creating a Zetabase client 
+## Library usage 
+
+### Creating a Zetabase client
+
+When you created your identity, you were assigned a user id (a uuid, or random-looking string of letters and numbers). use this to instantiate your client.
+ 
 ```python
 from zbpy import client 
 
 client = client.ZetabaseClient('YOUR USER ID')
 ```
 
-## Connecting your client to Zetabase
+### Connecting your client to Zetabase
 ```python
 client.connect()
 ```
 
-## If you would like to use JWT security for all requests run the following code
+### To use JWT authentication for all requests
+
+When you created your identity, you created a "name" (handle) and administrator password. You can use these instead of your tables are configured to allow it.
+
 ```python
 client.set_id_password('YOUR USERNAME', 'YOUR PASSWORD')
 client.auth_login_jwt()
 ```
 
-## If you would rather use ECDSA security for all requests import your private and public key from the file generated when you created an account
+### To use ECDSA authentication for all requests
 ```python
 priv_key = client.import_key('FILEPATH TO PRIVATE KEY', public=False)
 pub_key = client.import_key('FILEPATH TO PUBLIC KEY', public=True)
@@ -91,20 +99,32 @@ pub_key = client.import_key('FILEPATH TO PUBLIC KEY', public=True)
 client.set_id_key(priv_key, pub_key)
 ```
 
-## Creating Tables
-#### There are two methods to create tables using zbpy. There are two optional parameters with both of the methods: 
-1. perms: used to specify the permissions of the table (can also be added to an existing table using the add_perm() method)
-2.  allow_jwt: if true, allows data to be put into the table using jwt security.  
+### Creating Tables
 
-If you are creating a table to hold a pandas dataframe the easiest way is to use the following function. This will create a table with indexed fields that match the names and types of the columns of your dataframe and then insert your dataframe into the table.
+#### With Pandas
+
+**Note**: There are two methods to create tables using zbpy. There are two optional parameters with both of the methods: 
+
+1. `perms`: used to specify the permissions of the table (can also be added to an existing table using the `add_perm()` method)
+2.  `allow_jwt`: if true, allows data to be put into the table using JWT authentication.  
+
+If you are creating a table to hold a Pandas dataframe, the easiest way is to use the following function. This will create a table with indexed fields that match the names and types of the columns of your dataframe, and then it inserts your dataframe into the given table using some given "dataframe key" to identify it.
 ```python
 client.put_dataframe_new_table('TABLE ID', YOUR DATAFRAME, 'YOUR DF KEY')
 ```
+
 If you would like a subset of the DataFrame's columns to be turned into indexed fields in the table use the 'specify_fields' parameter. 
+
 ```python
 client.put_dataframe_new_table('Table ID', YOUR DATAFRAME, 'YOUR DF KEY', specify_fields=['age', 'height'])
 ```
-#### The other way of creating tables involves specifying the table type and indexed fields yourself. 
+
+This field can be `[]` to not index any fields (i.e. if you have no intention of querying the table based on field values).
+
+#### Custom tables (no Pandas)
+
+In this case, we create a new table by passing in a set of zero or more fields to index and some given list of permissions, e.g.: 
+
 ```python 
 from zbpy.indexedfieldentity import IndexedField
 from zbpy import zb_protocol_pb2 as zb
@@ -115,7 +135,8 @@ index_height = IndexedField('heigh', zb.QueryOrdering.REAL_NUMBERS)
 client.create_table('TABLE ID', zb.TableDataFormat.JSON, [index_age, index_height], [OPTIONAL PERMS], allow_jwt=True)
 ```
 
-## Creating permissions and adding them to existing tables
+### Creating permissions and adding them to existing tables
+
 ```python
 from zbpy.permissionentity import PermEntry
 from zbpy import zb_protocol_pb2 as zb
@@ -125,23 +146,26 @@ perm = PermEntry(zb.PermissionLevel.READ, zb.PermissionAudienceType.PUBLIC, '')
 client.add_permission('TABLE ID', perm)
 ```
 
-## Retrieving data and Pagination
-When using the functions list_keys(), get(), and query(), the data is returning as a PaginationHandler. A Pagination handler can be iteration over or turned into pandas DataFrames using the to_dataframe() method (both demonstrated below).
+### Retrieving data and Pagination
+When using the functions `list_keys()`, `get()`, and `query()`, the data is returned as a `PaginationHandler`. A `PaginationHandler` can be iterated over or turned into a Pandas dataframes using the `to_dataframe()` method (both demonstrated below).
 
-## Retrieving keys from table
+#### Retrieving keys from table
 ```python
 list_keys = client.list_keys('TABLE ID')
 keys = [key for key in list_keys]
 ```
 
-## Retrieving data by key 
+#### Retrieving data by key 
 ```python
 result = client.get('TABLE ID', ['KEY 1', 'KEY 2', 'KEY 3', 'etc.'])
 
 dataframe = result.to_dataframe()
 ```
 
-### If you would like your json to return as python dictionaries when iterated over use the return_pretty() method like so:
+### Retrieving data as objects
+
+The `return_pretty` method will pre-parse JSON objects for you.
+
 ```python
 result = client.get('TABLE ID', ['KEY 1', 'KEY 2', 'KEY 3', 'etc.'])
 result.return_pretty()
@@ -150,11 +174,14 @@ for i in result:
     print(i)
 ```
 
-## Retrieving data by query 
-To query data from Zetabase utilize, Field objects as well as indexed fields in tables. The example below assumes that a table exists with indexed fields 'age' and 'name'. Queries use '&' and '|' for 'and' and 'or' operators. 
-### **IMPORTANT**: when creating queries the field must always come before the value, as shown below. 
+#### Retrieving data by query 
+
+To query data from Zetabase, we have a Python-based DSL ("domain-specific language") that allows you to express queries. The idea is to use `Field` objects to represent indexed fields and to build queries based on them. We can then use comparison operators on each field to create a subquery, and we can combine subquery with logical operators. See [the documentation for more information](https://zetabase.io/docs/#/keyvalue).
+
+The example below assumes that a table exists with indexed fields 'age' and 'name'. Queries use '&' and '|' for 'and' and 'or' operators -- for that reason, use parentheses to avoid operator precedence issues. 
+
 ```python
-from zbpy import cleanqueries
+from zbpy import queries
 
 age = Field('age')
 name = Field('name')
@@ -166,7 +193,7 @@ for i in result:
     print(i)
 ```
 
-## Inserting data 
+### Inserting data 
 
 To insert a Pandas dataframe into an existing table, use the `put_dataframe()` method. Each row of the dataframe will be inserted as its own object, the collection of which is identified by a key: the `df_key` parameter. Dataframes can be appended to one another by simply storing a new dataframe using the same `df_key` on the same table as an existing dataframe.
 
@@ -174,12 +201,14 @@ To insert a Pandas dataframe into an existing table, use the `put_dataframe()` m
 client.put_dataframe('TABLE ID', YOUR DATAFRAME, 'YOUR DF KEY')
 ```
 
+To inesrt data without Pandas, we can use `put_data` for a single object, or `put_multi` for a list of objects:
+
 ```python
 client.put_data('TABLE ID', 'DATA KEY', DATA AS BYTES)
 client.put_multi('TABLE ID', ['KEY 1', 'KEY 2', 'KEY 3', 'etc.'], [DATA1 AS BYTES, DATA2 AS BYTES, etc.])
 ```
 
-### Notes
+#### Notes
 
 1. For performance reasons, to insert multiple pieces of data, it is suggested to use the `put_multi()` method.
 2. When possible, if storing large quantities of data, it is faster to use JWT over ECDSA if possible. 
