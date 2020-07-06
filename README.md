@@ -33,7 +33,7 @@ util.new_account_interactive()
 Answer the prompts that will appear and if the account is created successfully three files will be created in your current directory. One will contain your private key, another will contain your public key, and the third will contain both keys along with your user id. Your user id will be used to login (shown below).
 
 ## Test your installation 
-To test that everything has installed correctly run the test_zbpy method from zbpy.util like so in Jupyter or the Python interactive shell: 
+To test that everything has installed correctly run the test_zbpy method from zbpy.util like so in either Jupyter notebooks or the Python interactive shell: 
 ```python
 form zbpy import util 
 

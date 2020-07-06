@@ -1,7 +1,8 @@
-from setuptools import setup 
+import setuptools 
+from setuptools import setup
 
 modules = ['auth', 'basicqueries', 'queries', 'client', 'cryptography', 'datasci', 'indexedfieldentity', 'pagination', 'permissionentity', 'util', 'zbcert', 'zbprotocol_pb2_grpc', 'zbprotocol_pb2', 'winsign', 'test_zbpy']
-dependencies = ['pandas ~= 0.23.0',
+dependencies = ['pandas ~= 1.0.5',
                 'numpy ~= 1.14.3',
                 'grpcio ~= 1.29.0',
                 'grpcio-tools ~= 1.29.0',
@@ -19,9 +20,10 @@ with open('README.md', 'r') as f:
 
 setup(
     name='zbpy',
-    version='0.0.9',
+    version='0.0.10',
     description='A Python SDK for interacting with Zetabase.',
-    packages=['zbpy'],
+    packages=setuptools.find_packages(),
+    #packages=['zbpy'],
     #py_modules=modules,
     #package_dir={'':'zbpy'},
     python_requires='>=3.6',
