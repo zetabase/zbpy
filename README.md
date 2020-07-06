@@ -1,45 +1,69 @@
-# python-zb-client
-Python3 ZB client
+# zbpy: officially supported Zetabase client for Python 
+
+The `zbpy` package provides a pure-Python Zetabase client and reference implementation of the Zetabase protocol, along with integrations for commonly used Python tools like Numpy/Pandas.
+
+## Prerequisites and external dependencies 
+
+1. Python 3.6 or higher 
+2. `gcc` or equivalent compiler (except Windows)
+3. `gmp` library and headers (except Windows)
+
+**Note**: a C compiler is not required when running `zbpy` on Windows. However, all requests made with ECDSA on Windows will be 
+slightly slower when compared to other operating systems due to limitations of the platform. We recommend that heavy workloads
+on Windows use JWT authentication when possible.
+
+### Installing gmp (if needed)
+
+1. OSX: `brew install gmp`
+2. Ubuntu: `apt-get install libgmp3-dev`
+3. Centos: `yum install gmp gmp-devel gmp-status`
+
+Not required for Windows OS.
 
 ## Installation 
 Run the following to install: 
-```python
-pip install zbpy 
+```bash
+pip3 install zbpy 
 ```
 
-## External dependencies and easiest ways to satisfy them 
-### Note: a C compiler is not required when running zbpy on Windows. However, all requests made with ecdsa on Windows will be slightly slower when compared to other operating systems.
-1. - OSX -> Run 'brew install gcc'
-2. - Linux -> Run 'apt-get install libgmp3-dev'
-3. - Centos -> Run 'yum install gmp gmp-devel gmp-status' 
+You may get an error indicating you need to install `cython`. In this case, simply run the following: 
 
+```bash
+pip3 install cython
+``` 
 
-## Usage 
+And then re-run `pip3 install zbpy`.
 
-## Creating an account
-If you don't already have an account there are two ways to make one using this module. If you are using Jupyter notebooks simply run the following:  
-Note: due to the depreciation of certain functions in IPython, creating an account using in a Jupyter notebook won't work with Python 3.8. 
+## Creating an account 
+If you do not have an account already you can easily create one through the Python client module. If you are using Juptyer notebooks, simply use the Jupyter account creation magic: 
 ```python
 from zbpy import client 
 
 %createaccount
 ```
-Otherwise in the python interactive shell run the function new_account_interactive() like so: 
+The `%createaccount` magic will run you through an interactive wizard to create a new Zetabase user identity.
+
+Otherwise, run the following code within the Python interactive shell to go through the same wizard
+on the console: 
+
 ```python
-from zbpy import util
+from zbpy import util 
 
 util.new_account_interactive()
 ```
-Answer the prompts that will appear and if the account is created successfully three files will be created in your current directory. One will contain your private key, another will contain your public key, and the third will contain both keys along with your user id. Your user id will be used to login (shown below).
+
+Answer the prompts that will appear, and if the account is created successfully, three files will be created in your current directory. These are:
+1. your private key;
+2. your public key; and 
+3. an identity file containing both keys along with your user ID.
 
 ## Test your installation 
-To test that everything has installed correctly run the test_zbpy method from zbpy.util like so in either Jupyter notebooks or the Python interactive shell: 
+To test that everything has installed correctly run the `test_zbpy` method from `zbpy.util` in Jupyter or the Python interactive shell: 
 ```python
 form zbpy import util 
 
 util.test_zbpy()
 ```
-
 
 ## Creating a Zetabase client 
 ```python
@@ -47,17 +71,19 @@ from zbpy import client
 
 client = client.ZetabaseClient('YOUR USER ID')
 ```
+
 ## Connecting your client to Zetabase
 ```python
 client.connect()
 ```
-## If you would like to use jwt security for all requests run the following code
+
+## If you would like to use JWT security for all requests run the following code
 ```python
 client.set_id_password('YOUR USERNAME', 'YOUR PASSWORD')
 client.auth_login_jwt()
 ```
 
-## If you would rather use ecdsa security for all requests import your private and public key from the file generated when you created an account
+## If you would rather use ECDSA security for all requests import your private and public key from the file generated when you created an account
 ```python
 priv_key = client.import_key('FILEPATH TO PRIVATE KEY', public=False)
 pub_key = client.import_key('FILEPATH TO PUBLIC KEY', public=True)
@@ -141,14 +167,20 @@ for i in result:
 ```
 
 ## Inserting data 
-To insert a pandas dataframe into an existing table use the put_dataframe() method. To differentiate between different dataframes within a single table use the df_key parameter. Because uuids are used as subkeys for rows of a dataframe when entered into Zetabase, dataframes can be appended to one another by simply using the same df_key within a table. 
+
+To insert a Pandas dataframe into an existing table, use the `put_dataframe()` method. Each row of the dataframe will be inserted as its own object, the collection of which is identified by a key: the `df_key` parameter. Dataframes can be appended to one another by simply storing a new dataframe using the same `df_key` on the same table as an existing dataframe.
+
 ```python
 client.put_dataframe('TABLE ID', YOUR DATAFRAME, 'YOUR DF KEY')
 ```
-To insert individual pieces of data use the put_data() method and to insert multiple pieces of data at a time use the put_multi() method. 
-#### **IMPORTANT**: For optimal speed use jwt instead of ecdsa when using multiput. 
 
 ```python
 client.put_data('TABLE ID', 'DATA KEY', DATA AS BYTES)
 client.put_multi('TABLE ID', ['KEY 1', 'KEY 2', 'KEY 3', 'etc.'], [DATA1 AS BYTES, DATA2 AS BYTES, etc.])
 ```
+
+### Notes
+
+1. For performance reasons, to insert multiple pieces of data, it is suggested to use the `put_multi()` method.
+2. When possible, if storing large quantities of data, it is faster to use JWT over ECDSA if possible. 
+
