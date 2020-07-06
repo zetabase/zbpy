@@ -2,18 +2,18 @@ import setuptools
 from setuptools import setup
 
 modules = ['auth', 'basicqueries', 'queries', 'client', 'cryptography', 'datasci', 'indexedfieldentity', 'pagination', 'permissionentity', 'util', 'zbcert', 'zbprotocol_pb2_grpc', 'zbprotocol_pb2', 'winsign', 'test_zbpy']
-dependencies = ['pandas ~= 1.0.5',
-                'numpy ~= 1.14.3',
-                'grpcio ~= 1.29.0',
-                'grpcio-tools ~= 1.29.0',
-                'phonenumbers ~= 8.12.5',
-                'ipython ~= 6.4.0',
-                'ipython-genutils ~= 0.2.0',
-                'protobuf ~= 3.12.2',
-                'packaging ~= 17.1',
-                'starkbank-ecdsa ~= 1.0.0 ; platform_system=="Windows"',
-                'fastecdsa ~= 2.1.2 ; platform_system=="Darwin"',
-                'fastecdsa ~= 2.1.2 ; platform_system=="Linux"']
+dependencies = ['pandas >= 1.0.5',
+                'numpy >= 1.19.0'',
+                'grpcio >= 1.29.0',
+                'grpcio-tools >= 1.29.0',
+                'phonenumbers >= 8.12.5',
+                'ipython >= 6.4.0',
+                'ipython-genutils >= 0.2.0',
+                'protobuf >= 3.12.2',
+                'packaging >= 17.1',
+                'starkbank-ecdsa >= 1.0.0 ; platform_system=="Windows"',
+                'fastecdsa >= 2.1.2 ; platform_system=="Darwin"',
+                'fastecdsa >= 2.1.2 ; platform_system=="Linux"']
 
 with open('README.md', 'r') as f:
     long_description = f.read()
