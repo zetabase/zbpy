@@ -66,7 +66,7 @@ Answer the prompts that will appear, and if the account is created successfully,
 ## Test your installation 
 To test that everything has installed correctly run the `test_zbpy` method from `zbpy.util` in Jupyter or the Python interactive shell: 
 ```python
-form zbpy import util 
+from zbpy import util 
 
 util.test_zbpy()
 ```
