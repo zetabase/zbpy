@@ -136,7 +136,7 @@ from zbpy.indexedfieldentity import IndexedField
 from zbpy import zb_protocol_pb2 as zb
 
 index_age = IndexedField('age', zb.QueryOrdering.INTEGRAL_NUMBERS)
-index_height = IndexedField('heigh', zb.QueryOrdering.REAL_NUMBERS)
+index_height = IndexedField('height', zb.QueryOrdering.REAL_NUMBERS)
 
 client.create_table('TABLE ID', zb.TableDataFormat.JSON, [index_age, index_height], [OPTIONAL PERMS], allow_jwt=True)
 ```
@@ -207,7 +207,7 @@ To insert a Pandas dataframe into an existing table, use the `put_dataframe()` m
 client.put_dataframe('TABLE ID', YOUR DATAFRAME, 'YOUR DF KEY')
 ```
 
-To inesrt data without Pandas, we can use `put_data` for a single object, or `put_multi` for a list of objects:
+To insert data without Pandas, we can use `put_data` for a single object, or `put_multi` for a list of objects:
 
 ```python
 client.put_data('TABLE ID', 'DATA KEY', DATA AS BYTES)
@@ -218,4 +218,3 @@ client.put_multi('TABLE ID', ['KEY 1', 'KEY 2', 'KEY 3', 'etc.'], [DATA1 AS BYTE
 
 1. For performance reasons, to insert multiple pieces of data, it is suggested to use the `put_multi()` method.
 2. When possible, if storing large quantities of data, it is faster to use JWT over ECDSA if possible. 
-
