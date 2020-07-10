@@ -177,6 +177,31 @@ class ZetabaseClient():
         """
         return auth.make_credential_ecdsa(nonce, self.user_id, extra_bytes, self.priv_key)
 
+    def login_jwt(self, login_id, password):
+        """
+        Connects to Zetabase and logs in using jwt. 
+
+        Parameters:
+            login_id: string 
+            password: string 
+        """
+        self.connect()
+        self.set_id_password(login_id, password)
+        self.auth_login_jwt()
+
+    def setup_ecdsa(self, priv_filepath, pub_filepath):
+        """
+        Connects to Zetabase, imports the public and private key, and sets the sets. 
+
+        Parameters:
+            priv_filepath: string (filepath to private key)
+            pub_filepath: string (filepath to public key)
+        """
+        self.connect()
+        priv_key = import_key(priv_filepath, False)
+        pub_key = import_key(pub_filepath, True)
+        self.set_id_key(priv_key, pub_key)
+
     def auth_login_jwt(self):
         """
         Uses jwt to login.
