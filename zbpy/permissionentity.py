@@ -19,14 +19,14 @@ class PermConstraint():
     
 class PermEntry():
 
-    def __init__(self, level, audience_type, audience_id):
+    def __init__(self, level, audience_type, audience_id=''):
         """
         Initializes PermEntry with given level, audience_type, and audience_id. 
 
         Parameters:
             level: PermissionLevel  
             audience_type: PermissionAudienceType 
-            audience_id: string
+            audience_id: string (default='')
 
         Returns:
             PermEntry
@@ -85,6 +85,15 @@ def to_field_constraint(uid, table_id, cs):
 
     if cs.req_value.lower() == '@uid':
         f_typ = FieldConstraintValueType.UID 
+        f_val = ''
+    elif cs.req_value.lower() == '@time':
+        f_typ = FieldConstraintValueType.TIMESTAMP
+        f_val = ''
+    elif cs.req_value.lower() == '@order':
+        f_typ = FieldConstraintValueType.NATURAL_ORDER
+        f_val = ''
+    elif cs.req_value.lower() == '@random':
+        f_typ = FieldConstraintValueType.RANDOM
         f_val = ''
 
     return PermissionConstraint(
