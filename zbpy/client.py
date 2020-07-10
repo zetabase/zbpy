@@ -368,7 +368,7 @@ class ZetabaseClient():
 
         return unwrap_zb_error(error)
 
-    def new_sub_user(self, handle, email, mobile, password, signup_code, group_id, pub_key=None):
+    def new_sub_user(self, handle, email, mobile, password, signup_code, group_id):
         """
         Creates a new subuser and returns the subuser's id. 
 
@@ -379,14 +379,12 @@ class ZetabaseClient():
             password: string 
             signup_code: string 
             group_id: string 
-            pub_key: fastecdsa.PublicKey (default=self.pub_key)
 
         Returns: 
-            string 
+            string, PrivateKey, PublicKey
         """
-        if pub_key is None:
-            pub_key = self.pub_key
-
+        priv_key, pub_key = cryptography.generate_key_pair()
+        priv_key_encoded = cryptography.encode_private_key(priv_key, pub_key)
         pub_key_encoded = cryptography.encode_public_key(pub_key)
 
         result = self.stub.CreateUser(zbprotocol_pb2.NewSubIdentityRequest(
@@ -401,7 +399,7 @@ class ZetabaseClient():
         ))
 
         id = result.id 
-        return id
+        return id, priv_key, pub_key
 
     def add_permission(self, table_id, perm, table_owner_id=None):
         """

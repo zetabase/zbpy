@@ -83,7 +83,7 @@ def to_field_constraint(uid, table_id, cs):
     f_typ = FieldConstraintValueType.CONSTANT 
     f_val = cs.req_value 
 
-    if cs.req_value.islower() == '@uid':
+    if cs.req_value.lower() == '@uid':
         f_typ = FieldConstraintValueType.UID 
         f_val = ''
 
