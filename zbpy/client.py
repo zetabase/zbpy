@@ -690,7 +690,7 @@ class ZetabaseClient():
         
         return None
 
-    def put_dataframe_new_table(self, table_id, dataframe, df_key, perms=[], specify_fields=None, allow_jwt=False):
+    def put_dataframe_new_table(self, table_id, dataframe, df_key, perms=[], specify_fields=None, allow_jwt=True):
         """
         Creates a new table with indexed fields to match the names and types of the dataframe's columns. By default, all columns will be indexed, but
         a subset can be specified by listing the names of the columns in the 'specify_fields' parameter. 
@@ -794,7 +794,7 @@ class ZetabaseClient():
         """
         return self.stub
 
-    def create_table(self, table_id, data_type, indexed_fields=[], perms=[], allow_jwt=False):
+    def create_table(self, table_id, data_type, indexed_fields=[], perms=[], allow_jwt=True):
         """
         Creates a table with given attributes. 
 
