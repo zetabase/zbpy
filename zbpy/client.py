@@ -262,7 +262,7 @@ class ZetabaseClient():
 
         return self.list_keys_with_pattern(table_id, '', table_owner_id)
 
-    def list_tables(self, table_owner_id=None):
+    def list_tables(self, table_owner_id=None, return_json=False):
         """
         Lists all tables owned by the specified id. 
 
@@ -284,7 +284,10 @@ class ZetabaseClient():
             tableOwnerId=table_owner_id,
             credential=proof_of_credential
         ))
-        return result      
+
+        if return_json:
+            return result.tableDefinitions      
+        return [table.tableId for table in result.tableDefinitions]
 
     def get(self, table_id, keys, table_owner_id=None):
         """
@@ -421,7 +424,6 @@ class ZetabaseClient():
         perms_ent = perm.to_protocol(table_owner_id, table_id)
         perms_ent.nonce = nonce 
         proof_of_credential = self.get_credential(nonce, cryptography.permissions_entry_signing_bytes(perms_ent))
-        #perms_ent.credential = proof_of_credential
 
         error = self.stub.SetPermission(zbprotocol_pb2.PermissionsEntry(
             id=perms_ent.id, 

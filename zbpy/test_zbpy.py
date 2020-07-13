@@ -43,7 +43,7 @@ def zbpy_unittests():
     table_full_text = str(uuid.uuid4().int)
 
     def get_table(table_data, table_id):
-        for table in table_data.tableDefinitions:
+        for table in table_data:
             if table.tableId == table_id:
                 return table
 
@@ -64,21 +64,21 @@ def zbpy_unittests():
 
         def test_C_create_table(self):
             test_user.create_table(table_json, zbprotocol_pb2.TableDataFormat.JSON, [], [], allow_jwt=True)
-            tables = test_user.list_tables()
+            tables = test_user.list_tables(return_json=True)
             table = get_table(tables, table_json)
 
             self.assertEqual(table.tableId, table_json)
             self.assertEqual(table.dataFormat, zbprotocol_pb2.TableDataFormat.JSON)
 
             test_user.create_table(table_binary, zbprotocol_pb2.TableDataFormat.BINARY, [], [], allow_jwt=True)
-            tables = test_user.list_tables()
+            tables = test_user.list_tables(return_json=True)
             table = get_table(tables, table_binary)
 
             self.assertEqual(table.tableId, table_binary)
             self.assertEqual(table.dataFormat, zbprotocol_pb2.TableDataFormat.BINARY)
 
             test_user.create_table(table_text, zbprotocol_pb2.TableDataFormat.PLAIN_TEXT, [], [], True)
-            tables = test_user.list_tables()
+            tables = test_user.list_tables(return_json=True)
             table = get_table(tables, table_text)
 
             self.assertEqual(table.tableId, table_text)
