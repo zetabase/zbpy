@@ -36,9 +36,12 @@ class PaginationHandler():
             else:
                 raise StopIteration()
 
-        cur_key = self.cur_keys[self.cur_i]
-        cur_item = self.cur_data[cur_key]
-        self.cur_i += 1 
+        if len(self.cur_keys) > self.cur_i:
+            cur_key = self.cur_keys[self.cur_i]
+            cur_item = self.cur_data[cur_key]
+            self.cur_i += 1
+        else:
+            raise StopIteration()
 
 
         try:
