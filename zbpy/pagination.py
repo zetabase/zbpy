@@ -4,6 +4,9 @@ import json
 import pickle
 from ast import literal_eval
 
+def parse_object(s):
+    return json.loads(s)
+
 class PaginationHandler():
 
     def __init__(self, f):
@@ -159,8 +162,9 @@ class PaginationHandler():
             indices.append(i)
 
             #turn entry from bytes to python dictionary 
-            to_dict = all_data[i].decode()
-            entry = literal_eval(to_dict.replace('null', 'None'))
+            #to_dict = all_data[i].decode()
+            #entry = literal_eval(to_dict.replace('null', 'None'))
+            entry = parse_object(all_data[i])
             for key in entry: 
                 if key not in df_data:
                     df_data[key] = [entry[key]]
