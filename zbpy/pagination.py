@@ -150,6 +150,9 @@ class PaginationHandler():
         self.cur_data = dat
         self.has_next_page = nxt  
 
+    def to_numpy_arrays(self):
+        all_data = self.data_all()
+        return [pickle.loads(all_data[x]) for x in all_data.keys()]
     def to_dataframe(self):
         """
         Transforms all data in PaginationHandler into pandas.DataFrame.
