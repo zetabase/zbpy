@@ -1,11 +1,9 @@
-#import socket
-#import ssl
 import os 
 import grpc
 from . import zbprotocol_pb2_grpc
 from . import zbprotocol_pb2
 from . import auth
-from . import pagination # import standard_pagination_handler
+from . import pagination
 from .util import *
 from .datasci import * 
 from .indexedfieldentity import indexed_fields_to_protocol
@@ -191,7 +189,7 @@ class ZetabaseClient():
 
     def setup_ecdsa(self, priv_filepath, pub_filepath):
         """
-        Connects to Zetabase, imports the public and private key, and sets the sets. 
+        Connects to Zetabase, imports the public and private key, and sets them so the user is ready to make requests. 
 
         Parameters:
             priv_filepath: string (filepath to private key)
@@ -204,7 +202,7 @@ class ZetabaseClient():
 
     def auth_login_jwt(self):
         """
-        Uses jwt to login.
+        Uses jwt to login a ZetabaseClient that is already connected.
         
         Returns:
             None (if no error else raises exception) 
