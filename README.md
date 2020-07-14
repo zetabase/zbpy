@@ -80,29 +80,21 @@ When you created your identity, you were assigned a user id (a uuid, or random-l
 ```python
 from zbpy import client 
 
-client = client.ZetabaseClient('YOUR USER ID')
+zb_client = client.ZetabaseClient('YOUR USER ID')
 ```
 
-### Connecting your client to Zetabase
-```python
-client.connect()
-```
-
+## Connecting your client to Zetabase
 ### To use JWT authentication for all requests
 
-When you created your identity, you created a "name" (handle) and administrator password. You can use these instead of your tables are configured to allow it.
+When you created your identity, you created a "name" (handle) and administrator password. You can use these instead of your public and private keys if your tables are configured to allow it.
 
 ```python
-client.set_id_password('YOUR USERNAME', 'YOUR PASSWORD')
-client.auth_login_jwt()
+zb.login_jwt('YOUR USERNAME', 'YOUR PASSWORD')
 ```
 
 ### To use ECDSA authentication for all requests
 ```python
-priv_key = client.import_key('FILEPATH TO PRIVATE KEY', public=False)
-pub_key = client.import_key('FILEPATH TO PUBLIC KEY', public=True)
-
-client.set_id_key(priv_key, pub_key)
+zb_client.setup_ecdsa('FILEPATH TO PRIVATE KEY', 'FILEPATH TO PUBLIC KEY')
 ```
 
 ### Creating Tables
@@ -116,13 +108,13 @@ client.set_id_key(priv_key, pub_key)
 
 If you are creating a table to hold a Pandas dataframe, the easiest way is to use the following function. This will create a table with indexed fields that match the names and types of the columns of your dataframe, and then it inserts your dataframe into the given table using some given "dataframe key" to identify it.
 ```python
-client.put_dataframe_new_table('TABLE ID', YOUR DATAFRAME, 'YOUR DF KEY')
+zb_client.put_dataframe_new_table('TABLE ID', YOUR DATAFRAME, 'YOUR DF KEY')
 ```
 
 If you would like a subset of the DataFrame's columns to be turned into indexed fields in the table use the 'specify_fields' parameter. 
 
 ```python
-client.put_dataframe_new_table('Table ID', YOUR DATAFRAME, 'YOUR DF KEY', specify_fields=['age', 'height'])
+zb_client.put_dataframe_new_table('Table ID', YOUR DATAFRAME, 'YOUR DF KEY', specify_fields=['age', 'height'])
 ```
 
 This field can be `[]` to not index any fields (i.e. if you have no intention of querying the table based on field values).
@@ -138,7 +130,7 @@ from zbpy import zb_protocol_pb2 as zb
 index_age = IndexedField('age', zb.QueryOrdering.INTEGRAL_NUMBERS)
 index_height = IndexedField('height', zb.QueryOrdering.REAL_NUMBERS)
 
-client.create_table('TABLE ID', zb.TableDataFormat.JSON, [index_age, index_height], [OPTIONAL PERMS], allow_jwt=True)
+zb_client.create_table('TABLE ID', zb.TableDataFormat.JSON, [index_age, index_height], [OPTIONAL PERMS], allow_jwt=True)
 ```
 
 ### Creating permissions and adding them to existing tables
@@ -149,7 +141,7 @@ from zbpy import zb_protocol_pb2 as zb
 
 perm = PermEntry(zb.PermissionLevel.READ, zb.PermissionAudienceType.PUBLIC, '')
 
-client.add_permission('TABLE ID', perm)
+zb_client.add_permission('TABLE ID', perm)
 ```
 
 ### Retrieving data and Pagination
@@ -157,13 +149,13 @@ When using the functions `list_keys()`, `get()`, and `query()`, the data is retu
 
 #### Retrieving keys from table
 ```python
-list_keys = client.list_keys('TABLE ID')
+list_keys = zb_client.list_keys('TABLE ID')
 keys = [key for key in list_keys]
 ```
 
 #### Retrieving data by key 
 ```python
-result = client.get('TABLE ID', ['KEY 1', 'KEY 2', 'KEY 3', 'etc.'])
+result = zb_client.get('TABLE ID', ['KEY 1', 'KEY 2', 'KEY 3', 'etc.'])
 
 dataframe = result.to_dataframe()
 ```
@@ -173,7 +165,7 @@ dataframe = result.to_dataframe()
 The `return_pretty` method will pre-parse JSON objects for you.
 
 ```python
-result = client.get('TABLE ID', ['KEY 1', 'KEY 2', 'KEY 3', 'etc.'])
+result = zb_client.get('TABLE ID', ['KEY 1', 'KEY 2', 'KEY 3', 'etc.'])
 result.return_pretty()
 
 for i in result:
@@ -193,7 +185,7 @@ age = Field('age')
 name = Field('name')
 
 query = ((age == 19) | ((age > 25) & (age <= 27))) & (name == 'Austin')
-result = client.query('TABLE ID', query)
+result = zb_client.query('TABLE ID', query)
 
 for i in result:
     print(i)
@@ -204,14 +196,14 @@ for i in result:
 To insert a Pandas dataframe into an existing table, use the `put_dataframe()` method. Each row of the dataframe will be inserted as its own object, the collection of which is identified by a key: the `df_key` parameter. Dataframes can be appended to one another by simply storing a new dataframe using the same `df_key` on the same table as an existing dataframe.
 
 ```python
-client.put_dataframe('TABLE ID', YOUR DATAFRAME, 'YOUR DF KEY')
+zb_client.put_dataframe('TABLE ID', YOUR DATAFRAME, 'YOUR DF KEY')
 ```
 
 To insert data without Pandas, we can use `put_data` for a single object, or `put_multi` for a list of objects:
 
 ```python
-client.put_data('TABLE ID', 'DATA KEY', DATA AS BYTES)
-client.put_multi('TABLE ID', ['KEY 1', 'KEY 2', 'KEY 3', 'etc.'], [DATA1 AS BYTES, DATA2 AS BYTES, etc.])
+zb_client.put_data('TABLE ID', 'DATA KEY', DATA AS BYTES)
+zb_client.put_multi('TABLE ID', ['KEY 1', 'KEY 2', 'KEY 3', 'etc.'], [DATA1 AS BYTES, DATA2 AS BYTES, etc.])
 ```
 
 #### Notes
