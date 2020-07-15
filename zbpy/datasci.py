@@ -102,7 +102,7 @@ def parse_np_array(matrix, np_key, start_entry):
     keys = []
 
     i = start_entry
-    stop = start_entry + 1000 #NEED TO CHANGE THIS AND NUM IN put_np_array IN ORDER TO CHANGE HOW MANY ENTRIES ARE SENT AT A TIME
+    stop = start_entry + 1024 #NEED TO CHANGE THIS AND NUM IN put_np_array IN ORDER TO CHANGE HOW MANY ENTRIES ARE SENT AT A TIME
     len_matrix = len(matrix)
     done = False 
 
@@ -110,10 +110,28 @@ def parse_np_array(matrix, np_key, start_entry):
         stop = len_matrix
         done = True 
 
-    while(i < stop):    
-        input_bytes.append(pickle.dumps(matrix[i]))
+    while(i < stop):
+        input_matrix, i = get_np_rows(matrix, i)    
+        input_bytes.append(pickle.dumps(input_matrix))
         entry_uuid = uuid.uuid4()
         keys.append(f'{np_key}/{entry_uuid.int}')
-        i += 1
 
     return keys, input_bytes, done
+
+
+def get_np_rows(matrix, start_entry, x=512):
+    """
+    Returns the next x rows of a numpy array. 
+    """
+    arrays = []
+
+    matrix_len = len(matrix)
+    end_entry = start_entry + x
+
+    if matrix_len < start_entry + x:
+        end_entry = matrix_len 
+
+    for i in range(start_entry, end_entry):
+        arrays.append(matrix[i])
+        
+    return arrays, end_entry

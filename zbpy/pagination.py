@@ -179,9 +179,9 @@ class PaginationHandler():
         """
         Transforms all data in PaginationHandler into a list of numpy arrays. 
         """
-        matrix = [pickle.loads(i) for i in self]
-
-        return np.array(matrix)
+        tot = [pickle.loads(i) for i in self]
+    
+        return np.concatenate(tuple(tot), axis=0) 
         
 def standard_pagination_handler(f):
     """

@@ -664,7 +664,7 @@ class ZetabaseClient():
             if unwrap_zb_error(error) is not None:
                 return unwrap_zb_error(error)
 
-            start_entry += 1000 #NEED TO CHANGE THIS AND NUM IN parse_np_array IN ORDER TO CHANGE HOW MANY ENTRIES ARE SENT AT A TIME
+            start_entry += 1024 #NEED TO CHANGE THIS AND NUM IN parse_np_array IN ORDER TO CHANGE HOW MANY ENTRIES ARE SENT AT A TIME
         
         return None
 
