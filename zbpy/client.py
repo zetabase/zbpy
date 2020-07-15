@@ -636,7 +636,7 @@ class ZetabaseClient():
 
         return unwrap_zb_error(result)
 
-    def put_np_array(self, table_id, array, key, overwrite=False, table_owner_id=None):
+    def put_np_array(self, table_id, array, np_key, overwrite=False, table_owner_id=None):
         """
         Put numpy array into a table with the given key. 
 
@@ -652,11 +652,21 @@ class ZetabaseClient():
         """
         assert isinstance(array, np.ndarray)
 
-        entry_bytes = parse_np_array(array)
+        error = None 
+        more_data = True 
+        start_entry = 0
+        while(more_data):
+            keys, input_bytes, done = parse_np_array(array, np_key, start_entry)
+            more_data = not done 
 
-        error = self.put_data(table_id, key, entry_bytes, overwrite, table_owner_id)
+            error = self.put_multi(table_id, keys, input_bytes, overwrite, table_owner_id)
 
-        return unwrap_zb_error(error)
+            if unwrap_zb_error(error) is not None:
+                return unwrap_zb_error(error)
+
+            start_entry += 1000 #NEED TO CHANGE THIS AND NUM IN parse_np_array IN ORDER TO CHANGE HOW MANY ENTRIES ARE SENT AT A TIME
+        
+        return None
 
     def put_dataframe(self, table_id, dataframe, df_key, overwrite=False, table_owner_id=None):
         """

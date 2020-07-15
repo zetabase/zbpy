@@ -1,7 +1,10 @@
 import pandas as pd
 import numpy as np
 import json 
-import pickle
+try:
+    import _pickle as pickle
+except:
+    import pickle 
 from ast import literal_eval
 
 def parse_object(s):
@@ -49,20 +52,19 @@ class PaginationHandler():
 
         try:
             if self.return_dict:
-                return literal_eval(cur_item.decode())
+                return json.loads(cur_item)
 
             elif cur_item is not None:
                 return cur_item
                 
             else:
                 return cur_key
-        except AttributeError:
+        except TypeError:
             #Comes to this if (return literal_eval(cur_item.decode())) fails because cur_item is None
+            if cur_item is not None:
+                return pickle.loads(cur_item)
             return cur_key
-        except UnicodeDecodeError:
-            #Comes to this if (return literal_eval(cur_item.decode())) fails because cur_item is np array
-            return pickle.loads(cur_item)
-        #{cur_key:literal_eval(cur_item.decode())}
+        
 
     def return_pretty(self):
         """
@@ -150,13 +152,6 @@ class PaginationHandler():
         self.cur_data = dat
         self.has_next_page = nxt  
 
-    def to_numpy_arrays(self):
-        """
-        Transforms all data in PaginationHandler into a list of numpy arrays.
-        """
-        all_data = self.data_all()
-        return [pickle.loads(all_data[x]) for x in all_data.keys()]
-
     def to_dataframe(self):
         """
         Transforms all data in PaginationHandler into pandas.DataFrame.
@@ -179,7 +174,14 @@ class PaginationHandler():
                     df_data[key].append(entry[key])
 
         return pd.DataFrame(df_data, index=indices)
-            
+
+    def to_numpy_arrays(self):
+        """
+        Transforms all data in PaginationHandler into a list of numpy arrays. 
+        """
+        matrix = [pickle.loads(i) for i in self]
+
+        return np.array(matrix)
         
 def standard_pagination_handler(f):
     """

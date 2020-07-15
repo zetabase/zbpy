@@ -5,7 +5,10 @@ import pandas as pd
 import numpy as np
 from ast import literal_eval
 import json 
-import pickle
+try:
+    import _pickle as pickle
+except:
+    import pickle 
 
 
 def df_to_kvp(dataframe, df_key, start_entry):
@@ -88,12 +91,29 @@ def parse_df_column(col_name, col_type):
     indexed_field = IndexedField(field_name, field_type)
     return indexed_field 
 
-def parse_np_array(array):
+def parse_np_array(matrix, np_key, start_entry):
     """
     Returns bytes of an encoded 
 
     Parameters:
         array: np.array
     """
-    to_bytes = pickle.dumps(array)
-    return to_bytes 
+    input_bytes = []
+    keys = []
+
+    i = start_entry
+    stop = start_entry + 1000 #NEED TO CHANGE THIS AND NUM IN put_np_array IN ORDER TO CHANGE HOW MANY ENTRIES ARE SENT AT A TIME
+    len_matrix = len(matrix)
+    done = False 
+
+    if stop > len_matrix:
+        stop = len_matrix
+        done = True 
+
+    while(i < stop):    
+        input_bytes.append(pickle.dumps(matrix[i]))
+        entry_uuid = uuid.uuid4()
+        keys.append(f'{np_key}/{entry_uuid.int}')
+        i += 1
+
+    return keys, input_bytes, done
