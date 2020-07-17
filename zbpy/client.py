@@ -1,22 +1,22 @@
-import os 
+import os
 import grpc
 from . import zbprotocol_pb2_grpc
 from . import zbprotocol_pb2
 from . import auth
 from . import pagination
 from .util import *
-from .datasci import * 
+from .datasci import *
 from .indexedfieldentity import indexed_fields_to_protocol
 from . import cryptography
 import math
-import pandas as pd 
-import numpy as np 
-import tempfile 
+import pandas as pd
+import numpy as np
+import tempfile
 try:
     from IPython.core.magic import line_magic, Magics, magics_class
 except:
     pass
-from sys import platform 
+from sys import platform
 
 if platform != 'win32':
     from fastecdsa import curve
@@ -35,11 +35,11 @@ class ZetabaseClient():
         """
         Initializes a new Zetabase client.
 
-        Parameters: 
+        Parameters:
             uid: string
 
-        Returns: 
-            ZetabaseClient 
+        Returns:
+            ZetabaseClient
         """
         self.user_id = uid #string
         self.server_addr = 'api.zetabase.io:443' #string
@@ -71,22 +71,22 @@ class ZetabaseClient():
             self.conn = grpc.secure_channel(self.server_addr, credentials)
 
         self.stub = zbprotocol_pb2_grpc.ZetabaseProviderStub(self.conn)
-    
+
     def check_version(self):
         """
         Checks to see if Client version is compatible.
 
-        Returns: 
-            boolean, zbpprotocol_pb2.VersionDetails 
+        Returns:
+            boolean, zbpprotocol_pb2.VersionDetails
         """
         if not self.check_ready():
-            raise BaseException('NotReady')
+            raise Exception('NotReady')
 
         info = self.stub.VersionInfo(zbprotocol_pb2.ZbEmpty())
         min_client_version = info.minClientVersion
-        
+
         is_enough = is_sem_ver_version_at_least(CLIENT_VERSION, min_client_version)
-        
+
         return is_enough, info
 
     def set_insecure(self):
@@ -139,7 +139,7 @@ class ZetabaseClient():
         """
         Checks to see if the ZetabaseClient is ready to make a request.
 
-        Returns: 
+        Returns:
             boolean
         """
         if self.priv_key is not None or (self.password is not None and self.login_id is not None):
@@ -153,9 +153,9 @@ class ZetabaseClient():
 
     def jwt_credential(self):
         """
-        Uses the zetabase user's jwt_token to create proof of credential if they have one. 
+        Uses the zetabase user's jwt_token to create proof of credential if they have one.
 
-        Returns: 
+        Returns:
             ProofOfCredential
         """
         if self.jwt_token is not None:
@@ -164,24 +164,24 @@ class ZetabaseClient():
 
     def ecdsa_credential(self, nonce, extra_bytes):
         """
-        Creates ecdsa proof of credential using the specified nonce and bytes. 
+        Creates ecdsa proof of credential using the specified nonce and bytes.
 
         Parameters:
             nonce: int
             extra_bytes: list of bytes
 
-        Returns: 
+        Returns:
             ProofOfCredential
         """
         return auth.make_credential_ecdsa(nonce, self.user_id, extra_bytes, self.priv_key)
 
     def login_jwt(self, login_id, password):
         """
-        Connects to Zetabase and logs in using jwt. 
+        Connects to Zetabase and logs in using jwt.
 
         Parameters:
-            login_id: string 
-            password: string 
+            login_id: string
+            password: string
         """
         self.connect()
         self.set_id_password(login_id, password)
@@ -189,7 +189,7 @@ class ZetabaseClient():
 
     def setup_ecdsa(self, priv_filepath, pub_filepath):
         """
-        Connects to Zetabase, imports the public and private key, and sets them so the user is ready to make requests. 
+        Connects to Zetabase, imports the public and private key, and sets them so the user is ready to make requests.
 
         Parameters:
             priv_filepath: string (filepath to private key)
@@ -203,14 +203,14 @@ class ZetabaseClient():
     def auth_login_jwt(self):
         """
         Uses jwt to login a ZetabaseClient that is already connected.
-        
+
         Returns:
-            None (if no error else raises exception) 
+            None (if no error else raises exception)
         """
         if self.conn is None:
-            raise BaseException('NotReady')
+            raise Exception('NotReady')
         elif self.password is None:
-            raise BaseException('NoPasswordProvided')
+            raise Exception('NoPasswordProvided')
 
         parId = ''
         if self.parent_id is not None:
@@ -236,7 +236,7 @@ class ZetabaseClient():
             nonce: int
             x_bytes: bytes
 
-        Returns: 
+        Returns:
             ProofOfCredential
         """
         proof_of_credential = None
@@ -254,7 +254,7 @@ class ZetabaseClient():
             table_id: string
             table_owner_id: string (default=self.user_id)
 
-        Returns: 
+        Returns:
             PaginationHandler
         """
         if table_owner_id is None:
@@ -264,12 +264,12 @@ class ZetabaseClient():
 
     def list_tables(self, table_owner_id=None, return_json=False):
         """
-        Lists all tables owned by the specified id. 
+        Lists all tables owned by the specified id.
 
-        Parameters: 
+        Parameters:
             table_owner_id: string (default=self.user_id)
 
-        Returns: 
+        Returns:
             zbprotocol_pb2.ListTablesResponse
         """
         if table_owner_id is None:
@@ -286,19 +286,19 @@ class ZetabaseClient():
         ))
 
         if return_json:
-            return result.tableDefinitions      
+            return result.tableDefinitions
         return [table.tableId for table in result.tableDefinitions]
 
     def get(self, table_id, keys, table_owner_id=None):
         """
-        Returns all items from the specified table with the specified keys. 
+        Returns items from the specified table with the specified keys.
 
-        Parameters: 
+        Parameters:
             table_id: string
             keys: list of strings
             table_owner_id: string (default=self.user_id)
 
-        Returns: 
+        Returns:
             PaginationHandler
         """
         if table_owner_id is None:
@@ -321,7 +321,7 @@ class ZetabaseClient():
             page_idx: integer
         """
         if not self.check_ready():
-            raise BaseException('NotReady')
+            raise Exception('NotReady')
 
         nonce = self.nonce_maker.get_nonce()
         proof_of_credential = self.get_credential(nonce, None)
@@ -341,12 +341,27 @@ class ZetabaseClient():
             m[data_pair.key] = data_pair.value
         return m, res.pagination.hasNextPage
 
+    def get_all(self, table_id, table_owner_id=None):
+        """
+        Returns all items from the specified table. 
+
+        Parameters: 
+            table_id: string 
+            table_owner_id: string (default=self.user_id)
+
+        Returns: 
+            PaginationHandler
+        """
+        list_keys = self.list_keys(table_id, table_owner_id)
+        keys = [key for key in list_keys]
+        return self.get(table_id, keys, table_owner_id)
+
     def id(self):
         """
-        Gives the ZetabaseClient's user id. 
+        Gives the ZetabaseClient's user id.
 
         Returns:
-            string 
+            string
         """
         return self.user_id
 
@@ -355,11 +370,11 @@ class ZetabaseClient():
         Confirms the creation of a new subuser using the subuser's verification code (sent to phone).
 
         Parameters:
-            subuser_id: string 
+            subuser_id: string
             verification_code: string
 
-        Returns: 
-            None (if no error else raises exception) 
+        Returns:
+            None (if no error else raises exception)
         """
         error = self.stub.ConfirmNewIdentity(zbprotocol_pb2.NewIdentityConfirm(
             id=subuser_id,
@@ -371,17 +386,17 @@ class ZetabaseClient():
 
     def new_sub_user(self, handle, email, mobile, password, signup_code, group_id):
         """
-        Creates a new subuser and returns the subuser's id. 
+        Creates a new subuser and returns the subuser's id.
 
-        Parameters: 
-            handle: string 
-            email: string 
+        Parameters:
+            handle: string
+            email: string
             mobile: string
-            password: string 
-            signup_code: string 
-            group_id: string 
+            password: string
+            signup_code: string
+            group_id: string
 
-        Returns: 
+        Returns:
             string, PrivateKey, PublicKey
         """
         priv_key, pub_key = cryptography.generate_key_pair()
@@ -399,34 +414,34 @@ class ZetabaseClient():
             groupId=group_id
         ))
 
-        id = result.id 
+        id = result.id
         return id, priv_key, pub_key
 
     def add_permission(self, table_id, perm, table_owner_id=None):
         """
-        Adds a new permission to an existing table. 
+        Adds a new permission to an existing table.
 
         Parameters:
-            table_id: string 
+            table_id: string
             perm: PermEntry
             table_owner_id: string (default=self.user_id)
 
         Returns:
-            None (if no error else raises exception) 
+            None (if no error else raises exception)
         """
         if table_owner_id is None:
             table_owner_id = self.user_id
 
         if not self.check_ready():
-            raise BaseException('NotReady')
-        
+            raise Exception('NotReady')
+
         nonce = self.nonce_maker.get_nonce()
         perms_ent = perm.to_protocol(table_owner_id, table_id)
-        perms_ent.nonce = nonce 
+        perms_ent.nonce = nonce
         proof_of_credential = self.get_credential(nonce, cryptography.permissions_entry_signing_bytes(perms_ent))
 
         error = self.stub.SetPermission(zbprotocol_pb2.PermissionsEntry(
-            id=perms_ent.id, 
+            id=perms_ent.id,
             tableId=perms_ent.tableId,
             audienceType=perms_ent.audienceType,
             audienceId=perms_ent.audienceId,
@@ -441,11 +456,11 @@ class ZetabaseClient():
 
     def list_keys_with_pattern(self, table_id, pattern, table_owner_id=None):
         """
-        Lists keys that begin with a certain prefix. 
+        Lists keys that begin with a certain prefix.
 
         Parameters:
-            table_id: string 
-            pattern: string 
+            table_id: string
+            pattern: string
             table_owner_id: string (default=self.user_id)
 
         Returns:
@@ -469,7 +484,7 @@ class ZetabaseClient():
         Returns string array and boolean.
         """
         if not self.check_ready:
-            raise BaseException('NotReady')
+            raise Exception('NotReady')
         nonce = self.nonce_maker.get_nonce()
         proof_of_credential = self.get_credential(nonce, None)
 
@@ -490,11 +505,11 @@ class ZetabaseClient():
         """
         Returns all of the subusers of the ZetabaseClient.
 
-        Returns: 
+        Returns:
             zbprotocol_pb2.SubIdentitiesList.subIdentities
         """
         if not self.check_ready():
-            raise BaseException('NotReady')
+            raise Exception('NotReady')
 
         nonce = self.nonce_maker.get_nonce()
         proof_of_credential = self.get_credential(nonce, None)
@@ -509,7 +524,7 @@ class ZetabaseClient():
 
     def query(self, table_id, qry, table_owner_id=None):
         """
-        Queries data based on the specified query and table. 
+        Queries data based on the specified query and table.
 
         Parameters:
             table_id: string
@@ -535,7 +550,7 @@ class ZetabaseClient():
         Returns a map of strings to bytes and a boolean.
         """
         if not self.check_ready:
-            raise BaseException('NotReady')
+            raise Exception('NotReady')
 
         nonce = self.nonce_maker.get_nonce()
         proof_of_credential = self.get_credential(nonce, None)
@@ -558,7 +573,7 @@ class ZetabaseClient():
 
     def put_data(self, table_id, key, value, overwrite=False, table_owner_id=None):
         """
-        Put the specified data into the specified table with the given key. 
+        Put the specified data into the specified table with the given key.
 
         Parameters:
             table_id: string
@@ -571,7 +586,7 @@ class ZetabaseClient():
             None (if no error else raises exception)
         """
         if not self.check_ready():
-            raise BaseException('NotReady')
+            raise Exception('NotReady')
 
         if table_owner_id is None:
             table_owner_id = self.user_id
@@ -595,20 +610,20 @@ class ZetabaseClient():
 
     def put_multi(self, table_id, keys, values, overwrite=False, table_owner_id=None):
         """
-        Put multiple pieces of data into a table with the specified keys. 
+        Put multiple pieces of data into a table with the specified keys.
 
         Parameters:
             table_id: string
             keys: list of strings
-            values: list of bytes 
+            values: list of bytes
             overwrite: boolean (default=False)
             table_owner_id: string (default=self.user_id)
 
-        Returns: 
+        Returns:
             None (if no error else raises exception)
         """
         if len(values) != len(keys):
-            raise BaseException('ImproperDimensions')
+            raise Exception('ImproperDimensions')
 
         if table_owner_id is None:
             table_owner_id = self.user_id
@@ -638,12 +653,12 @@ class ZetabaseClient():
 
     def put_np_array(self, table_id, array, np_key, overwrite=False, table_owner_id=None):
         """
-        Put numpy array into a table with the given key. 
+        Put numpy array into a table with the given key.
 
         Parameters:
-            table_id: string 
-            array: np.array 
-            key: string 
+            table_id: string
+            array: np.array
+            key: string
             overwrite: boolean (default=False)
             table_owner_id: string (default=self.user_id)
 
@@ -652,12 +667,12 @@ class ZetabaseClient():
         """
         assert isinstance(array, np.ndarray)
 
-        error = None 
-        more_data = True 
+        error = None
+        more_data = True
         start_entry = 0
         while(more_data):
             keys, input_bytes, done = parse_np_array(array, np_key, start_entry)
-            more_data = not done 
+            more_data = not done
 
             error = self.put_multi(table_id, keys, input_bytes, overwrite, table_owner_id)
 
@@ -665,31 +680,31 @@ class ZetabaseClient():
                 return unwrap_zb_error(error)
 
             start_entry += 1024 #NEED TO CHANGE THIS AND NUM IN parse_np_array IN ORDER TO CHANGE HOW MANY ENTRIES ARE SENT AT A TIME
-        
+
         return None
 
     def put_dataframe(self, table_id, dataframe, df_key, overwrite=False, table_owner_id=None):
         """
-        Put pandas DataFrame into a json table with a specified key that will designate all entries of the dataframe. 
+        Put pandas DataFrame into a json table with a specified key that will designate all entries of the dataframe.
 
         Parameters:
-            table_id: string 
+            table_id: string
             dataframe: pandas.DataFrame
-            df_key: string 
+            df_key: string
             overwrite: boolean (default=False)
             table_owner_id: string (default=self.user_id)
 
         Returns:
-            None (if no error else raises exception) 
+            None (if no error else raises exception)
         """
         assert isinstance(dataframe, pd.DataFrame)
 
-        error = None 
-        more_data = True 
+        error = None
+        more_data = True
         start_entry = 0
         while(more_data):
             keys, input_bytes, done = df_to_kvp(dataframe, df_key, start_entry)
-            more_data = not done 
+            more_data = not done
 
             error = self.put_multi(table_id, keys, input_bytes, overwrite, table_owner_id)
 
@@ -697,24 +712,24 @@ class ZetabaseClient():
                 return unwrap_zb_error(error)
 
             start_entry += 1000 #NEED TO CHANGE THIS AND NUM IN dv_to_kvp IN ORDER TO CHANGE HOW MANY ENTRIES ARE SENT AT A TIME
-        
+
         return None
 
     def put_dataframe_new_table(self, table_id, dataframe, df_key, perms=[], specify_fields=None, allow_jwt=True):
         """
         Creates a new table with indexed fields to match the names and types of the dataframe's columns. By default, all columns will be indexed, but
-        a subset can be specified by listing the names of the columns in the 'specify_fields' parameter. 
+        a subset can be specified by listing the names of the columns in the 'specify_fields' parameter.
 
         Parameters:
-            table_id: string 
-            dataframe: pandas.DataFrame 
-            df_key: string 
+            table_id: string
+            dataframe: pandas.DataFrame
+            df_key: string
             perms: list of PermEntry objects (default=[])
             specify_fields: list of strings (default=All columns)
             allow_jwt: boolean (default=False)
-        
-        Returns: 
-            None (if no error else raises exception) 
+
+        Returns:
+            None (if no error else raises exception)
         """
         assert isinstance(dataframe, pd.DataFrame)
 
@@ -731,7 +746,7 @@ class ZetabaseClient():
 
     def delete_table(self, table_id, table_owner_id=None):
         """
-        Deletes the specified table. 
+        Deletes the specified table.
 
         Parameters:
             table_id: string
@@ -744,7 +759,7 @@ class ZetabaseClient():
             table_owner_id = self.user_id
 
         if not self.check_ready():
-            raise BaseException('NotReady')
+            raise Exception('NotReady')
 
         nonce = self.nonce_maker.get_nonce()
         extra_bytes = table_id.encode('utf-8')
@@ -764,21 +779,21 @@ class ZetabaseClient():
 
     def delete_key(self, table_id, key, table_owner_id=None):
         """
-        Deletes the specified key. 
+        Deletes the specified key.
 
         Parameters:
             table_id: string
             key: string
             table_owner_id: string (default=self.user_id)
-        
-        Returns: 
+
+        Returns:
             None (if no error else raises exception)
         """
         if table_owner_id is None:
             table_owner_id = self.user_id
 
         if not self.check_ready():
-            raise BaseException('NotReady')
+            raise Exception('NotReady')
 
         nonce = self.nonce_maker.get_nonce()
         extra_bytes = key.encode('utf-8')
@@ -806,20 +821,20 @@ class ZetabaseClient():
 
     def create_table(self, table_id, data_type, indexed_fields=[], perms=[], allow_jwt=True):
         """
-        Creates a table with given attributes. 
+        Creates a table with given attributes.
 
         Parameters:
             table_id: string
-            data_type: zbprotocol_pb2.TableDataFormat 
-            indexed_fields: list of IndexedField (default=[]) 
+            data_type: zbprotocol_pb2.TableDataFormat
+            indexed_fields: list of IndexedField (default=[])
             perms: list of PermEntrys (default=[])
             allow_jwt: boolean (default=False)
 
-        Returns: 
+        Returns:
             None (if no error else raises exception)
         """
         if not self.check_ready():
-            raise BaseException('NotReady')
+            raise Exception('NotReady')
 
         p_entries = []
         for perm in perms:
@@ -846,11 +861,11 @@ if platform != 'win32':
 
     def import_key(filepath, public, curve=curve.P256):
         """
-        Returns the keys located at the specified filepath. 
+        Returns the keys located at the specified filepath.
 
         Parameters:
-            filepath: string 
-            public: boolean 
+            filepath: string
+            public: boolean
             curve: fastecdsa.curve (default=P256)
 
         Returns:
@@ -869,7 +884,7 @@ if platform != 'win32':
                 start_e = text.find(b)
                 length = len(a)
                 file_key = text[length+1:start_e]
-            
+
             new_text = f'{c}\n{file_key}{d}\n'
 
             with tempfile.NamedTemporaryFile(mode='w+t', suffix='.priv', prefix=os.path.basename(__file__)) as tf:
@@ -881,18 +896,18 @@ if platform != 'win32':
                 priv_key = import_key_fastecdsa(tf_directory, public=public, curve=curve)
                 return priv_key[0]
 
-            
+
         return import_key_fastecdsa(filepath, public=public, curve=curve)
 
 else:
 
     def import_key(filepath, public):
         """
-        Returns the keys located at the specified filepath. 
+        Returns the keys located at the specified filepath.
 
         Parameters:
-            filepath: string 
-            public: boolean 
+            filepath: string
+            public: boolean
         Returns:
             ellipticcurve.key (public or private)
         """
@@ -908,7 +923,7 @@ else:
                 start_e = text.find(b)
                 length = len(a)
                 file_key = text[length+1:start_e]
-            
+
             new_text = f'{c}\n{file_key}{d}'
 
             return privateKey.PrivateKey.fromPem(new_text)
@@ -923,7 +938,7 @@ else:
             start_e = text.find(b)
             length = len(a)
             file_key = text[length+1:start_e]
-        
+
         new_text = f'{c}\n{file_key}{d}'
 
 
