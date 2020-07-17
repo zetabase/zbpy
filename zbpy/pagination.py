@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import json 
+from .util import unwrap_zb_error
 try:
     import _pickle as pickle
 except:
@@ -9,6 +10,62 @@ from ast import literal_eval
 
 def parse_object(s):
     return json.loads(s)
+
+class PutPages():
+
+    def __init__(self, client, keys, data):
+        self.client = client 
+        self.keys = keys 
+        self.data = data 
+        self.max_bytes_per_page = 2000000 
+        self.cur_idx = 0 
+    
+    def put_all(self, table_id, overwrite, table_owner_id=None):
+        if table_owner_id == None:
+            table_owner_id = self.client.id()
+
+        key_pages, value_pages = self.pagify()
+
+        for i in range(len(key_pages)):
+            keys = key_pages[i]
+            values = value_pages[i]
+            
+            error = self.client.put_multi(table_id, keys, values, overwrite, table_owner_id)
+            
+            if unwrap_zb_error(error) is not None:
+                return unwrap_zb_error(error)
+
+        return None
+
+
+    def pagify(self):
+        """
+        Returns 2d array of strings, 2d array of bytes.
+        """
+        page_bytes = 0 
+        cur_page = []
+        cur_page_values = []
+        pages = []
+        page_values = []
+
+        for i in range(len(self.keys)):
+            d_len = len(self.data[i])
+            if (page_bytes + d_len) > self.max_bytes_per_page:
+                pages.append(cur_page)
+                page_values.append(cur_page_values)
+                cur_page = []
+                cur_page_values = []
+                page_bytes = 0 
+
+            cur_page.append(self.keys[i])
+            cur_page_values.append(self.data[i])
+            page_bytes += d_len
+
+        if len(cur_page) > 0:
+            pages.append(cur_page)
+            page_values.append(cur_page_values)
+
+        return pages, page_values 
 
 class PaginationHandler():
 
