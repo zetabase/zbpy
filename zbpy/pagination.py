@@ -20,10 +20,15 @@ class PutPages():
         self.max_bytes_per_page = 2000000 
         self.cur_idx = 0 
     
-    def put_all(self, table_id, overwrite, table_owner_id=None):
-        if table_owner_id == None:
-            table_owner_id = self.client.id()
+    def put_all(self, table_id, overwrite=False, table_owner_id=None):
+        """
+        Puts data into specified table. 
 
+        Parameters: 
+            table_id: string 
+            overwrite: boolean (default=False)
+            table_owner_id: string (default=self.client.id())
+        """
         key_pages, value_pages = self.pagify()
 
         for i in range(len(key_pages)):
@@ -239,7 +244,98 @@ class PaginationHandler():
         tot = [pickle.loads(i) for i in self]
     
         return np.concatenate(tuple(tot), axis=0) 
+
+class GetPages():
+
+    def __init__(self, client, keys, max_item_size):
+        self.data_keys = keys
+        self.max_item_size = max_item_size
+        self.max_page_size = 2000000
+        self.client = client 
+        self.pag_handlers = []
+        self.pag_index = 0 
+
+    def break_keys(self):
+        key_groups = []
+        items_per_page = self.max_page_size // self.max_item_size
+        items_per_page = 9
+
+        len_keys = len(self.data_keys)
+        for i in range(0, len_keys+items_per_page, items_per_page):
+            kg = self.data_keys[i-items_per_page:i]
+            key_groups.append(kg)
         
+        return key_groups[1:]
+
+    def get_all(self, table_id, table_owner_id=None):
+        key_groups = self.break_keys()
+
+        for kg in key_groups:
+            pag = self.client.get(table_id, kg, table_owner_id)
+            self.pag_handlers.append(pag)
+
+    def data_all(self):
+        data = {}
+        for pag in self.pag_handlers:
+            pag_data = pag.data_all()
+            data.update(pag_data)
+
+        return data
+
+    def keys_all(self):
+        keys = []
+        for pag in self.pag_handlers:
+            pag_keys = pag.keys_all()
+            keys += pag_keys
+
+        return keys
+
+    def return_pretty(self):
+        for pag in self.pag_handlers:
+            pag.return_pretty()
+
+    def return_bytes(self):
+        for pag in self.pag_handlers:
+            pag.return_bytes()
+
+    def data(self):
+        cur_pag_handler = self.pag_handlers[self.pag_index]
+        return cur_pag_handler.data()
+
+    def keys(self):
+        keys = []
+        cur_pag_handler = self.pag_handlers[self.pag_index]
+        for key in cur_pag_handler.data():
+            keys.append(key)
+        
+        return keys
+    
+    def next(self):
+        cur_pag_handler = self.pag_handlers[self.pag_index]
+
+        if cur_pag_handler.has_next_page:
+            cur_pag_handler.next()
+        elif self.pag_index < len(self.pag_handlers) - 1:
+                self.pag_index += 1 
+                cur_pag_handler = self.pag_handlers[self.pag_index]
+
+    def to_dataframe(self):
+        dfs = []
+
+        for pag in self.pag_handlers:
+            dfs.append(pag.to_dataframe())
+
+        return pd.concat(dfs)
+
+    def to_numpy_arrays(self):
+        arrays = []
+
+        for pag in self.pag_handlers:
+            arrays.append(pag.to_numpy_arrays())
+
+        return np.concatenate(tuple(arrays), axis=0)
+
+
 def standard_pagination_handler(f):
     """
     Returns an object of class PaginationHandler.
