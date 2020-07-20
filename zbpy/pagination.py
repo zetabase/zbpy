@@ -255,10 +255,26 @@ class GetPages():
         self.pag_handlers = []
         self.pag_index = 0 
 
+    def __iter__(self):
+        return self 
+
+    def __next__(self):
+        cur_pag_handler = self.pag_handlers[self.pag_index]
+
+        try:
+            return cur_pag_handler.__next__()
+        except StopIteration:
+            if self.pag_index < len(self.pag_handlers) - 1:
+                self.pag_index += 1
+                cur_pag_handler = self.pag_handlers[self.pag_index]
+                return cur_pag_handler.__next__()
+            
+            raise StopIteration()
+
+
     def break_keys(self):
         key_groups = []
         items_per_page = self.max_page_size // self.max_item_size
-        items_per_page = 9
 
         len_keys = len(self.data_keys)
         for i in range(0, len_keys+items_per_page, items_per_page):
