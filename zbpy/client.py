@@ -8,7 +8,6 @@ from .util import *
 from .datasci import *
 from .indexedfieldentity import indexed_fields_to_protocol
 from . import cryptography
-import math
 import pandas as pd
 import numpy as np
 import tempfile

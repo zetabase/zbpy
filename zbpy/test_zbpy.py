@@ -6,6 +6,7 @@ import json
 import time  
 import pandas as pd
 import numpy as np 
+import time
 
 def zbpy_unittests():
     jwt_or_ecdsa = str(input('Would you like to test with jwt or ecdsa? (enter "j" or "e"): ')).strip()
@@ -110,7 +111,8 @@ def zbpy_unittests():
             #overwrite 
 
             test_user.put_data(table_json, 'test_put_data', test_data2_bytes, overwrite=True)
-
+            
+            time.sleep(3)
             get_data3 = test_user.get(table_json, ['test_put_data'])
             get_data3.return_pretty()
             data3 = [data for data in get_data3][0]
@@ -125,9 +127,11 @@ def zbpy_unittests():
 
             array = np.array([[1, 2, 3], [4, 5, 6]])
             test_user.put_np_array(table_binary, array, 'nparray')
-            result = test_user.get(table_binary, ['nparray'])
-            result.return_pretty()
-            arr_get = [i for i in result][0]
+            list_keys = test_user.list_keys_with_pattern(table_binary, 'nparray/%')
+            keys = [key for key in list_keys]
+            result = test_user.get(table_binary, keys)
+            
+            arr_get = result.to_numpy_arrays()
 
             comparison = arr_get == array 
             are_equal = comparison.all() 
