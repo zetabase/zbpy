@@ -130,7 +130,7 @@ class PaginationHandler():
 
     def return_pretty(self):
         """
-        Will make items return as Python dictionaries or numpy arrays when PaginationHandler is iterated through. 
+        Will make items return as Python dictionaries when PaginationHandler is iterated through. 
         """
         self.return_dict = True 
 
@@ -333,7 +333,6 @@ class GetPages():
             cur_pag_handler.next()
         elif self.pag_index < len(self.pag_handlers) - 1:
                 self.pag_index += 1 
-                cur_pag_handler = self.pag_handlers[self.pag_index]
 
     def to_dataframe(self):
         dfs = []
