@@ -316,6 +316,17 @@ class GetPages():
 
         return data 
 
+    def get_first_n_pages(self, n):
+        data = {}
+
+        while self.key_index < n:
+            cur_pag = self.get_cur_pag()
+            data.update(cur_pag.data_all())
+
+            self.key_index += 1 
+        
+        return data 
+
     def keys_all(self):
         keys = []
         while self.key_index < len(self.key_groups):
