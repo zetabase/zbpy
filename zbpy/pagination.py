@@ -245,108 +245,121 @@ class PaginationHandler():
     
         return np.concatenate(tuple(tot), axis=0) 
 
+def break_keys(keys, items_per_page):
+    key_groups = []
+
+    len_keys = len(keys)
+    for i in range(0, len_keys+items_per_page, items_per_page):
+        kg = keys[i-items_per_page:i]
+        key_groups.append(kg)
+    return key_groups[1:]
+
 class GetPages():
 
-    def __init__(self, client, keys, max_item_size):
-        self.data_keys = keys
-        self.max_item_size = max_item_size
-        self.max_page_size = 2000000
+    def __init__(self, client, keys, max_item_size, table_id, table_owner_id=None):
+        if table_owner_id is None: 
+            table_owner_id = client.id()
+
+        max_page_size = 2000000
+        items_per_page = max_page_size // max_item_size 
+
+
         self.client = client 
-        self.pag_handlers = []
-        self.pag_index = 0 
+        self.key_groups = break_keys(keys, items_per_page)
+        self.items_per_page = items_per_page
+        self.table_id = table_id 
+        self.table_owner_id = table_owner_id
+        self.key_index = 0 
+        self.pretty = False 
+        self.cur_pag = None 
 
     def __iter__(self):
         return self 
 
     def __next__(self):
-        cur_pag_handler = self.pag_handlers[self.pag_index]
+        if self.cur_pag is None:
+            self.cur_pag = self.get_cur_pag()
 
         try:
-            return cur_pag_handler.__next__()
+            if self.pretty:
+                self.cur_pag.return_dict = True 
+            else:
+                self.cur_pag.return_dict = False 
+            return self.cur_pag.__next__()
+
         except StopIteration:
-            if self.pag_index < len(self.pag_handlers) - 1:
-                self.pag_index += 1
-                cur_pag_handler = self.pag_handlers[self.pag_index]
-                return cur_pag_handler.__next__()
+            if self.key_index < len(self.key_groups) - 1:
+                self.key_index += 1
+                self.cur_pag = self.get_cur_pag()
+
+                if self.pretty:
+                    self.cur_pag.return_dict = True 
+                else:
+                    self.cur_pag.return_dict = False
+
+                return self.cur_pag.__next__()
             
             raise StopIteration()
 
-
-    def break_keys(self):
-        key_groups = []
-        items_per_page = self.max_page_size // self.max_item_size
-
-        len_keys = len(self.data_keys)
-        for i in range(0, len_keys+items_per_page, items_per_page):
-            kg = self.data_keys[i-items_per_page:i]
-            key_groups.append(kg)
-        
-        return key_groups[1:]
-
-    def get_all(self, table_id, table_owner_id=None):
-        key_groups = self.break_keys()
-
-        for kg in key_groups:
-            pag = self.client.get(table_id, kg, table_owner_id)
-            self.pag_handlers.append(pag)
+    def get_cur_pag(self):
+        pag = self.client.get(self.table_id, self.key_groups[self.key_index], self.table_owner_id)
+        return pag
 
     def data_all(self):
         data = {}
-        for pag in self.pag_handlers:
-            pag_data = pag.data_all()
-            data.update(pag_data)
+        
+        while self.key_index < len(self.key_groups):
+            cur_pag = self.get_cur_pag()
+            data.update(cur_pag.data_all())
 
-        return data
+            self.key_index += 1 
+
+        return data 
 
     def keys_all(self):
         keys = []
-        for pag in self.pag_handlers:
-            pag_keys = pag.keys_all()
-            keys += pag_keys
+        while self.key_index < len(self.key_groups):
+            cur_pag = self.get_cur_pag()
+            keys += cur_pag.keys_all()
+            self.key_index += 1 
 
-        return keys
+        return keys 
 
     def return_pretty(self):
-        for pag in self.pag_handlers:
-            pag.return_pretty()
+        self.pretty = True 
 
     def return_bytes(self):
-        for pag in self.pag_handlers:
-            pag.return_bytes()
+        self.pretty = False 
 
     def data(self):
-        cur_pag_handler = self.pag_handlers[self.pag_index]
-        return cur_pag_handler.data()
+        cur_pag = self.get_cur_pag()
+        return cur_pag.data_all()
 
     def keys(self):
-        keys = []
-        cur_pag_handler = self.pag_handlers[self.pag_index]
-        for key in cur_pag_handler.data():
-            keys.append(key)
-        
-        return keys
+        cur_pag = self.get_cur_pag()
+        return cur_pag.keys_all()
     
     def next(self):
-        cur_pag_handler = self.pag_handlers[self.pag_index]
-
-        if cur_pag_handler.has_next_page:
-            cur_pag_handler.next()
-        elif self.pag_index < len(self.pag_handlers) - 1:
-                self.pag_index += 1 
+        if self.key_index < len(self.key_groups) - 1:
+            self.key_index += 1 
 
     def to_dataframe(self):
         dfs = []
 
-        for pag in self.pag_handlers:
-            dfs.append(pag.to_dataframe())
+        while self.key_index < len(self.key_groups):
+            cur_pag = self.get_cur_pag()
+            dfs.append(cur_pag.to_dataframe())
+            self.key_index += 1 
 
         return pd.concat(dfs)
 
     def to_numpy_arrays(self):
         arrays = []
 
-        for pag in self.pag_handlers:
-            arrays.append(pag.to_numpy_arrays())
+        while self.key_index < len(self.key_groups):
+            cur_pag = self.get_cur_pag()
+            arrays.append(cur_pag.to_numpy_arrays())
+            self.key_index += 1 
 
         return np.concatenate(tuple(arrays), axis=0)
 
