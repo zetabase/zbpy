@@ -35,7 +35,7 @@ class PutPages():
             keys = key_pages[i]
             values = value_pages[i]
             
-            error = self.client.put_multi(table_id, keys, values, overwrite, table_owner_id)
+            error = self.client.put_multi_helper(table_id, keys, values, overwrite, table_owner_id)
             
             if unwrap_zb_error(error) is not None:
                 return unwrap_zb_error(error)
@@ -302,7 +302,7 @@ class GetPages():
             raise StopIteration()
 
     def get_cur_pag(self):
-        pag = self.client.get(self.table_id, self.key_groups[self.key_index], self.table_owner_id)
+        pag = self.client.get_helper(self.table_id, self.key_groups[self.key_index], self.table_owner_id)
         return pag
 
     def data_all(self):

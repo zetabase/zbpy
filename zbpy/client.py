@@ -254,7 +254,7 @@ class ZetabaseClient():
             table_owner_id: string (default=self.user_id)
 
         Returns:
-            PaginationHandler
+            GetPages
         """
         if table_owner_id is None:
             table_owner_id = self.user_id
@@ -288,7 +288,24 @@ class ZetabaseClient():
             return result.tableDefinitions
         return [table.tableId for table in result.tableDefinitions]
 
-    def get(self, table_id, keys, table_owner_id=None):
+    def get(self, table_id, keys, table_owner_id=None, max_item_size=1000):
+        """
+        Returns items from the specified table with the specified keys.
+
+        Parameters:
+            table_id: string
+            keys: list of strings
+            table_owner_id: string (default=self.user_id)
+            max_item_size: integer (default=1000)
+
+        Returns:
+            GetPages
+        """
+        get_pages = pagination.GetPages(self, keys, max_item_size, table_id, table_owner_id)
+        return get_pages
+
+
+    def get_helper(self, table_id, keys, table_owner_id=None):
         """
         Returns items from the specified table with the specified keys.
 
@@ -298,7 +315,7 @@ class ZetabaseClient():
             table_owner_id: string (default=self.user_id)
 
         Returns:
-            PaginationHandler
+            GetPages
         """
         if table_owner_id is None:
             table_owner_id = self.user_id
@@ -349,7 +366,7 @@ class ZetabaseClient():
             table_owner_id: string (default=self.user_id)
 
         Returns: 
-            PaginationHandler
+            GetPages
         """
         list_keys = self.list_keys(table_id, table_owner_id)
         keys = [key for key in list_keys]
@@ -463,7 +480,7 @@ class ZetabaseClient():
             table_owner_id: string (default=self.user_id)
 
         Returns:
-            PaginationHandler
+            GetPages
         """
         if table_owner_id is None:
             table_owner_id = self.user_id
@@ -608,6 +625,24 @@ class ZetabaseClient():
         return unwrap_zb_error(error)
 
     def put_multi(self, table_id, keys, values, overwrite=False, table_owner_id=None):
+        """
+        Put multiple pieces of data into a table with the specified keys.
+
+        Parameters:
+            table_id: string
+            keys: list of strings
+            values: list of bytes
+            overwrite: boolean (default=False)
+            table_owner_id: string (default=self.user_id)
+
+        Returns:
+            None (if no error else raises exception)
+        """
+        put_pages = pagination.PutPages(self, keys, values)
+        res = put_pages.put_all(table_id, overwrite, table_owner_id)
+        return res
+
+    def put_multi_helper(self, table_id, keys, values, overwrite=False, table_owner_id=None):
         """
         Put multiple pieces of data into a table with the specified keys.
 
