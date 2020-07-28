@@ -3,7 +3,7 @@ from .zbprotocol_pb2 import EcdsaSignature, NewIdentityRequest, NewIdentityConfi
 from .zbprotocol_pb2_grpc import ZetabaseProviderStub
 #from .zbcert import ZBCERT
 #from .indexedfieldentity import IndexedField
-#import pandas as pd 
+#import pandas as pd
 #import numpy as np
 #import uuid
 import json
@@ -11,7 +11,7 @@ import json
 from packaging.version import parse as parse_version
 import os
 import grpc
-import re 
+import re
 import phonenumbers
 import time
 from sys import platform
@@ -27,14 +27,14 @@ class Nonce():
 
     def get_nonce(self):
         """
-        Returns int. 
+        Returns int.
         """
         nonce = time.time()
         return int(nonce)
 
 def empty_signature():
     """
-    Returns empty EcdsaSignature object. 
+    Returns empty EcdsaSignature object.
     """
     return EcdsaSignature(r='', s='')
 
@@ -46,25 +46,25 @@ def unwrap_zb_error(error):
         error: ZbError
     """
     if error is None:
-        return None 
+        return None
     elif error.code == 0 and len(error.message) > 0:
         raise Exception(error.message)
     return None
 
 def is_sem_ver_version_at_least(user_version, min_version):
     """
-    Returns boolean. 
+    Returns boolean.
 
     Parameters:
-        user_version: string 
+        user_version: string
         min_version: string
     """
     parsed_user_version = parse_version(user_version)
     parsed_min_version = parse_version(min_version)
 
     if parsed_user_version < parsed_min_version:
-        return False 
-    return True 
+        return False
+    return True
 
 def get_stub():
     """
@@ -79,19 +79,19 @@ def get_stub():
     credentials = grpc.ssl_channel_credentials()
     conn = grpc.secure_channel(server_addr, credentials)
     stub = ZetabaseProviderStub(conn)
-    return stub 
+    return stub
 
 
 def clean_string_for_filename(filename):
     """
-    Returns string. 
+    Returns string.
 
     Parameters:
         filename: string
     """
     valid_file = re.sub('[^\w_.)( -]', '', filename)
     return valid_file
-    
+
 
 class IdentityDefinition():
 
@@ -103,7 +103,7 @@ class IdentityDefinition():
 
     def to_dict(self):
         """
-        Returns dictionary. 
+        Returns dictionary.
         """
         return {
             'id': self.id,
@@ -118,30 +118,30 @@ def new_account_interactive():
         return
 
     email = input('Email Address: ').strip()
-    name = input('Your full name: ').strip()
+    name = input('Your username: ').strip()
 
-    valid_phone = False 
+    valid_phone = False
     phone = input('Your mobile number with region code (e.g. +12125551212 for U.S.): ').strip()
     while(not valid_phone):
         parsed_phone = phonenumbers.parse(phone, None)
         if not phonenumbers.is_valid_number(parsed_phone):
             phone = input('Invalid number. A phone number is required to confirm your account and set up 2FA.\nPlease provide your mobile number in international format (e.g. +12125551212 for U.S.): ').strip()
         else:
-            valid_phone = True 
+            valid_phone = True
 
-    valid_password = False 
+    valid_password = False
     password = input('Your administrator website password: ').strip()
     while(not valid_password):
         if len(password) < 6:
             password = input('Invalid password (too short). Your administrator website password: ').strip()
         else:
-            valid_password = True 
+            valid_password = True
 
     generate_key = input('Would you like us to generate a key for this identity (y/n): ').strip()
 
     if generate_key.lower() == 'y':
         priv_key, pub_key = generate_key_pair()
-        
+
         encoded_priv = encode_private_key(priv_key, pub_key)
 
         a = '-----BEGIN PRIVATE KEY-----'
@@ -160,8 +160,8 @@ def new_account_interactive():
         ts = int(time.time())
         fn_pub = f'zetabase.{ts}.pub'
         fn_priv = f'zetabase.{ts}.priv'
-        key_fn = fn_pub 
-        pk_fn = fn_priv 
+        key_fn = fn_pub
+        pk_fn = fn_priv
 
         with open(fn_pub, 'w') as pub_file:
             pub_file.write(encoded_pub)
@@ -195,7 +195,7 @@ def new_account_interactive():
     if res.error is not None and res.error.code != 0:
         print(f'Failed to register new identity {res.error.message} ({res.error.code})')
     else:
-        user_id = res.id 
+        user_id = res.id
         id_defn = IdentityDefinition(
             id=user_id,
             parent_id='',
@@ -205,7 +205,7 @@ def new_account_interactive():
 
         id_fn = f'zetabase.{clean_string_for_filename(name)}.identity'
         input_data = id_defn.to_dict()
-        
+
         with open(id_fn, 'w') as f:
             json.dump(input_data, f, indent=1)
 
@@ -230,7 +230,7 @@ def new_account_interactive():
                 ))
 
             if util.unwrap_zb_error(error) is None:
-                wrong_confirmation = False 
+                wrong_confirmation = False
 
         print(f'Success! Result: saved identity to file: {id_fn}\n > Id {user_id}')
 
