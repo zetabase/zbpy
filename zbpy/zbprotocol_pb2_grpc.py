@@ -63,6 +63,11 @@ class ZetabaseProviderStub(object):
                 request_serializer=zbprotocol__pb2.TableQuery.SerializeToString,
                 response_deserializer=zbprotocol__pb2.TableGetResponse.FromString,
                 )
+        self.QueryKeys = channel.unary_unary(
+                '/zbprotocol.ZetabaseProvider/QueryKeys',
+                request_serializer=zbprotocol__pb2.TableQuery.SerializeToString,
+                response_deserializer=zbprotocol__pb2.ListKeysResponse.FromString,
+                )
         self.CreateUser = channel.unary_unary(
                 '/zbprotocol.ZetabaseProvider/CreateUser',
                 request_serializer=zbprotocol__pb2.NewSubIdentityRequest.SerializeToString,
@@ -158,6 +163,12 @@ class ZetabaseProviderServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def QueryKeys(self, request, context):
+        """Missing associated documentation comment in .proto file"""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def CreateUser(self, request, context):
         """Missing associated documentation comment in .proto file"""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -246,6 +257,11 @@ def add_ZetabaseProviderServicer_to_server(servicer, server):
                     servicer.QueryData,
                     request_deserializer=zbprotocol__pb2.TableQuery.FromString,
                     response_serializer=zbprotocol__pb2.TableGetResponse.SerializeToString,
+            ),
+            'QueryKeys': grpc.unary_unary_rpc_method_handler(
+                    servicer.QueryKeys,
+                    request_deserializer=zbprotocol__pb2.TableQuery.FromString,
+                    response_serializer=zbprotocol__pb2.ListKeysResponse.SerializeToString,
             ),
             'CreateUser': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateUser,
@@ -444,6 +460,22 @@ class ZetabaseProvider(object):
         return grpc.experimental.unary_unary(request, target, '/zbprotocol.ZetabaseProvider/QueryData',
             zbprotocol__pb2.TableQuery.SerializeToString,
             zbprotocol__pb2.TableGetResponse.FromString,
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def QueryKeys(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/zbprotocol.ZetabaseProvider/QueryKeys',
+            zbprotocol__pb2.TableQuery.SerializeToString,
+            zbprotocol__pb2.ListKeysResponse.FromString,
             options, channel_credentials,
             call_credentials, compression, wait_for_ready, timeout, metadata)
 
