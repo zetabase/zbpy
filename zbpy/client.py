@@ -540,7 +540,7 @@ class ZetabaseClient():
 
     def query(self, table_id, qry, table_owner_id=None):
         """
-        Queries data based on the specified query and table.
+        Queries keys based on the specified query and table.
 
         Parameters:
             table_id: string
@@ -561,6 +561,22 @@ class ZetabaseClient():
 
         return pagination.standard_pagination_handler(pag_requester)
 
+    def query_data(self, table_id, qry, table_owner_id=None, max_item_size=1000): 
+        """
+         Queries keys based on the specified query and table.
+
+        Parameters:
+            table_id: string
+            qry: Query type object
+            table_owner_id: string (default=self.user_id)
+
+        Returns:
+            GetPages
+        """
+        res = self.query(table_id, qry, table_owner_id)
+        keys = [k for k in res]
+        return self.get(table_id, keys, table_owner_id, max_item_size)
+
     def __query_helper(self, table_owner_id, table_id, pg_inx, qry):
         """
         Returns a map of strings to bytes and a boolean.
@@ -571,7 +587,7 @@ class ZetabaseClient():
         nonce = self.nonce_maker.get_nonce()
         proof_of_credential = self.get_credential(nonce, None)
 
-        res = self.stub.QueryData(zbprotocol_pb2.TableQuery(
+        res = self.stub.QueryKeys(zbprotocol_pb2.TableQuery(
              id=self.user_id,
              tableOwnerId=table_owner_id,
              tableId=table_id,
@@ -582,8 +598,8 @@ class ZetabaseClient():
         ))
 
         m = {}
-        for data_pair in res.data:
-            m[data_pair.key] = data_pair.value
+        for k in res.keys:
+            m[k] = None
 
         return m, res.pagination.hasNextPage
 
