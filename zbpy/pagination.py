@@ -343,10 +343,16 @@ class GetPages():
         self.pretty = False 
 
     def data(self):
+        if self.key_groups == []:
+            return {}
+
         cur_pag = self.get_cur_pag()
         return cur_pag.data_all()
 
     def keys(self):
+        if self.key_groups == []:
+            return []
+
         cur_pag = self.get_cur_pag()
         return cur_pag.keys_all()
     
