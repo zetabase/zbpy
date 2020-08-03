@@ -145,35 +145,35 @@ def zbpy_unittests():
             height = queries.Field('height')
 
             query = (species == 'bear') & (population < 2000)
-            result = test_user.query(table_df, query)
+            result = test_user.query_data(table_df, query)
             result.return_pretty()
             data = [i for i in result][0]
 
             self.assertEqual({"species": "bear", "population": 1864, "height": 10.3}, data)
 
             query = (population >= 80000) & (species == 'marsupial')
-            result = test_user.query(table_df, query)
+            result = test_user.query_data(table_df, query)
             result.return_pretty()
             data = [i for i in result][0]
 
             self.assertEqual({"species": "marsupial", "population": 80000, "height": 4.5}, data)
 
             query = ((height == 10.3) & (population <=1864)) | (height > 11)
-            result = test_user.query(table_df, query)
+            result = test_user.query_data(table_df, query)
             result.return_pretty()
             data = [i for i in result][0]
 
             self.assertEqual({"species": "bear", "population": 1864, "height": 10.3}, data)
 
             query = (height >= 10.3)
-            result = test_user.query(table_df, query)
+            result = test_user.query_data(table_df, query)
             result.return_pretty()
             data = [i for i in result][0]
 
             self.assertEqual(data, {"species": "bear", "population": 1864, "height": 10.3}  )
 
             query = (height > 10.3)
-            result = test_user.query(table_df, query)
+            result = test_user.query_data(table_df, query)
             data = result.data_all()
 
             self.assertEqual({}, data)
@@ -219,7 +219,7 @@ def zbpy_unittests():
             text = queries.Field('text')
             query = (text % 'Austin')
 
-            result = test_user.query(table_full_text, query)
+            result = test_user.query_data(table_full_text, query)
             result.return_pretty()
             get_data = [i for i in result][0]
 
