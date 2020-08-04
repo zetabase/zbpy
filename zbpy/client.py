@@ -143,7 +143,7 @@ class ZetabaseClient():
         """
         if self.priv_key is not None or (self.password is not None and self.login_id is not None):
             if self.conn is not None:
-                if self.login_id is not None and self.jwt_token is not None:
+                if self.login_id is not None and self.jwt_token is None:
                     err = self.auth_login_jwt()
                     if err is not None:
                         return False
