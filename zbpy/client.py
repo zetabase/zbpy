@@ -261,7 +261,7 @@ class ZetabaseClient():
 
         return self.list_keys_with_pattern(table_id, '', table_owner_id)
 
-    def list_tables(self, table_owner_id=None, return_json=False):
+    def list_tables(self, return_json=False):
         """
         Lists all tables owned by the specified id.
 
@@ -271,16 +271,13 @@ class ZetabaseClient():
         Returns:
             zbprotocol_pb2.ListTablesResponse
         """
-        if table_owner_id is None:
-            table_owner_id = self.user_id
-
         nonce = self.nonce_maker.get_nonce()
         proof_of_credential = self.get_credential(nonce, None)
 
         result = self.stub.ListTables(zbprotocol_pb2.ListTablesRequest(
             id=self.user_id,
             nonce=nonce,
-            tableOwnerId=table_owner_id,
+            tableOwnerId=self.user_id,
             credential=proof_of_credential
         ))
 
