@@ -266,7 +266,7 @@ class ZetabaseClient():
         Lists all tables owned by the specified id.
 
         Parameters:
-            table_owner_id: string (default=self.user_id)
+            return_json: boolean
 
         Returns:
             zbprotocol_pb2.ListTablesResponse
