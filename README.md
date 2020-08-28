@@ -89,7 +89,7 @@ zb_client = client.ZetabaseClient('YOUR USER ID')
 When you created your identity, you created a "name" (handle) and administrator password. You can use these instead of your public and private keys if your tables are configured to allow it.
 
 ```python
-zb.login_jwt('YOUR USERNAME', 'YOUR PASSWORD')
+zb_client.login_jwt('YOUR USERNAME', 'YOUR PASSWORD')
 ```
 
 ### To use ECDSA authentication for all requests
@@ -145,7 +145,7 @@ zb_client.add_permission('TABLE ID', perm)
 ```
 
 ### Retrieving data and Pagination
-When using the functions `list_keys()`, `get()`, and `query()`, the data is returned as a `PaginationHandler`. A `PaginationHandler` can be iterated over or turned into a Pandas dataframes using the `to_dataframe()` method (both demonstrated below).
+When using the functions `list_keys()`, `get()`, and `query()`, the data is returned as a `GetPages` object. A `GetPages` objects can be iterated over or turned into a Pandas dataframes using the `to_dataframe()` method (both demonstrated below).
 
 #### Retrieving keys from table
 ```python

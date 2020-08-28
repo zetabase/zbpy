@@ -20,7 +20,7 @@ with open('README.md', 'r') as f:
 
 setup(
     name='zbpy',
-    version='0.1.0',
+    version='0.1.1',
     description='A Python SDK for interacting with Zetabase.',
     packages=setuptools.find_packages(),
     #packages=['zbpy'],
